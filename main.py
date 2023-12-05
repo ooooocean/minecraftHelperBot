@@ -76,7 +76,7 @@ async def test(ctx):
     await ctx.send('test passed')
 
 # converts overworld coords to nether coords
-@bot.command(name='convert')
+@bot.command(name='convert', description="Converts overworld coordinates to Nether coordinates.")
 async def on_message(ctx):
     # define function to check coords
     def check_string_format_coords(string):
@@ -112,7 +112,7 @@ async def on_message(ctx):
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
 
-@bot.command(name='coordslist')
+@bot.command(name='listcoords', description="Lists saved coordinates.")
 async def on_message(ctx):
     # connect to DB
     try:
@@ -148,17 +148,19 @@ async def on_message(ctx):
         await ctx.send("There was a problem connecting to the database :(")
 
     # generate embed object for display
-    embed_object = discord.Embed(title="Coordinates List")
-    embed_object.add_field(name="Coords",
-                           value='\n'.join(coords_embed_list),
-                           inline=True)
+    embed_object = discord.Embed(title="Coordinates List",
+                                 description="this looks kind of boring...ping any suggestions over OWO")
     embed_object.add_field(name="Description",
                            value='\n'.join(description_embed_list),
                            inline=True)
+    embed_object.add_field(name="Coords",
+                           value='\n'.join(coords_embed_list),
+                           inline=True)
+
     embed_object.set_thumbnail(url="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/7c15a5ea-0f0a-4641-a73b-f504324da8ed/d4v2t3p-5bca9982-2e12-49bd-b821-d17e226b94ab.png/v1/fill/w_900,h_506,q_75,strp/minecraft_map_by_theswedishswede-d4v2t3p.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwic3ViIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS5vcGVyYXRpb25zIl0sIm9iaiI6W1t7InBhdGgiOiIvZi83YzE1YTVlYS0wZjBhLTQ2NDEtYTczYi1mNTA0MzI0ZGE4ZWQvZDR2MnQzcC01YmNhOTk4Mi0yZTEyLTQ5YmQtYjgyMS1kMTdlMjI2Yjk0YWIucG5nIiwid2lkdGgiOiI8PTkwMCIsImhlaWdodCI6Ijw9NTA2In1dXX0.pRk4hg347bq3tYPDGl76EuZixO5JTr_6_PG0V8vrZ64")
     await ctx.send(embed=embed_object)
 
-@bot.command(name='addcoords')
+@bot.command(name='addcoords', description="Adds coordinates in the format x,y,z,<description>.")
 async def on_message(ctx):
     # write the message to a variable
     message_content = ctx.message.content
@@ -208,7 +210,5 @@ async def on_message(ctx):
 
     else:
         await ctx.send("Please input in the format 'x, y, z, <description>'.")
-
-
 
 bot.run(TOKEN)
