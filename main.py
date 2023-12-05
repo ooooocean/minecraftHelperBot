@@ -1,6 +1,8 @@
 # minecraftHelperBot
 
 import os
+import mariadb
+import sys
 import re
 import json
 import random
@@ -40,6 +42,11 @@ import math
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
+HOST = os.getenv('HOST')
+PORT = os.getenv('PORT')
+USER = os.getenv('USER')
+PASSWORD = os.getenv('PASSWORD')
+DATABASE = os.getenv('DATABASE')
 
 # allows for bot to detect all members belonging to the server.
 intents = discord.Intents.default()
@@ -110,6 +117,7 @@ async def on_message(ctx):
 
 @bot.command(name='coordslist')
 async def on_message(ctx):
+    # generate embed object for display
     embed_object = discord.Embed(title="test title",
                                  description= "test description")
     await ctx.send(embed=embed_object)
