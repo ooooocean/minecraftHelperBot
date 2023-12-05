@@ -22,7 +22,7 @@ database_params = {
 }
 
 # allows for bot to detect all members belonging to the server.
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.members = True
 intents.reactions = True
 intents.messages = True
