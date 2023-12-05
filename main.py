@@ -211,7 +211,7 @@ async def on_message(ctx):
 
             # define sql for insertion
             sql = "DELETE FROM minecraftCoords WHERE id=?"
-            data = (coords_id)
+            data = coords_id
 
             cursor.execute(sql, data)
             conn.commit()
