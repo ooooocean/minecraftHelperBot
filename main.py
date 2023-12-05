@@ -5,7 +5,8 @@ import mariadb
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
-
+from PIL import image
+import pytesseract
 
 # import re package to make data parsing easier
 import re
@@ -232,5 +233,10 @@ async def on_message(ctx):
 
     else:
         await ctx.send("Please input in the format 'mc.deletecoords <id>'.")
+
+@bot.command(name='imgtocoords', description='Takes a inecraft image input and converts it to text.')
+async def on_message(ctx):
+    imagecoords = ctx.message.attachment.url
+    print(imagecoords)
 
 bot.run(TOKEN)
