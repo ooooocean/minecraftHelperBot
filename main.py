@@ -183,4 +183,54 @@ async def on_message(ctx):
     else:
         await ctx.send("Please input in the format 'x, y, z, <description>'.")
 
+@bot.command(name='deletecoords', description="Removes coordinates from the list by specifying the ID.")
+async def on_message(ctx):
+    print('Delete coordinates function triggered.')
+    # write the message to a variable
+    message_content = ctx.message.content
+
+    # define content to remove
+    command = bot_prefix + 'deletecoords '
+
+    # remove command text for parsing
+    coords_id = message_content.replace(command, '')
+
+    # define function to check message format
+    def check_string_format_coords_id(string):
+        pattern = '\d*'
+        if re.match(pattern, string):
+            return (True)
+
+    if check_string_format_coords_id(coords_id):
+        # Attempt connection
+        try:
+            conn = mariadb.connect(**database_params)
+            print(f"Connected to DB. Inserting the following data:")
+
+            cursor = conn.cursor()
+
+            # define sql for insertion
+            sql = "DELETE FROM minecraftCoords WHERE id=?"
+            data = (coords_id)
+
+            cursor.execute(sql, data)
+            conn.commit()
+            print("Data deleted successfully.")
+
+            # Close Connection
+            cursor.close()
+            conn.close()
+            print("Connection closed.")
+
+            await ctx.send(
+                "Your coordinates have been successfully deleted! Please run mc.coordslist to see the updated list.")
+            print('----')
+
+        except mariadb.Error as e:
+            print(f"Error connecting to the database: {e}")
+            await ctx.send("There was a problem connecting to the database :(")
+
+    else:
+        await ctx.send("Please input in the format 'mc.deletecoords <id>'.")
+
 bot.run(TOKEN)
