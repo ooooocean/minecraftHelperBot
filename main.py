@@ -143,29 +143,39 @@ async def on_message(ctx):
             return (True)
 
     if check_string_format_coords(coords_info):
-        await ctx.send("valid info")
+        # convert string to list
+        coords_info_list = coords_info.split(',')
+
+        # Attempt connection
+        try:
+            conn = mariadb.connect(**database_params)
+            print(f"Connected to DB. Inserting the following data:")
+            print(coords_info_list)
+
+            cursor = conn.cursor()
+
+            # define sql for insertion
+            sql = "INSERT INTO minecraftCoords (serverId, xCoord, yCoord, zCoord, description) VALUES (?,?,?,?,?)"
+            data = (GUILD,coords_info_list[0],coords_info_list[1],coords_info_list[2],coords_info_list[3])
+
+            cursor.execute(sql,data)
+            conn.commit()
+            print("Data inserted successfully.")
+
+            # Close Connection
+            cursor.close()
+            conn.close()
+            print("Connection closed.")
+
+            await ctx.send("Your coordinates have been successfully saved! Please run mc.coordslist to see the updated list.")
+
+        except mariadb.Error as e:
+            print(f"Error connecting to the database: {e}")
+            await ctx.send("There was a problem connecting to the database :(")
+
     else:
-        await ctx.send("invalid info")
+        await ctx.send("Please input in the format 'x, y, z, <description>'.")
 
-    # Attempt connection
-    try:
-        conn = mariadb.connect(**database_params)
-
-        print(f"Connected!")
-
-        #cursor = conn.cursor()
-
-        #cursor.execute("SELECT * FROM alchemy_vials")
-
-        #for rows in cursor:
-        #    print(f"Retrieved the following: {rows}")
-
-        # Close Connection
-        conn.close()
-
-    except mariadb.Error as e:
-        print(f"Error connecting to the database: {e}")
-        await ctx.send("There was a problem connecting to the databse :(")
 
 
 bot.run(TOKEN)
