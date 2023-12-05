@@ -9,6 +9,8 @@ import pytesseract
 import io
 import requests
 from PIL import Image
+import matplotlib.pyplot as plt
+import datetime
 # import re package to make data parsing easier
 import re
 
@@ -24,6 +26,8 @@ database_params = {
 }
 # assign path for tesseract
 pytesseract.pytesseract.tesseract_cmd = os.getenv('PYTESSERACTPATH')
+
+# train mo
 
 # allows for bot to detect all members belonging to the server.
 intents = discord.Intents.all()
@@ -114,7 +118,17 @@ async def on_message(ctx):
         coords_embed_list = []
         description_embed_list = []
         db_id_list = []
+        # define lists for plotting map
+        x_coord_list = []
+        z_coord_list = []
+        description_list = []
         for item in cursor:
+            # generate coords list for map creation
+            x_coord_list.append(item[1])
+            z_coord_list.append(item[3])
+            description_list.append(item[4])
+
+            # generate data for embed
             coords_embed_list.append(str(item[1]) + ', ' + str(item[2]) + ', ' + str(item[3]))
             description_embed_list.append(item[4])
             db_id_list.append(item[0])
@@ -128,6 +142,13 @@ async def on_message(ctx):
     except mariadb.Error as e:
         print(f"Error connecting to the database: {e}")
         await ctx.send("There was a problem connecting to the database :(")
+
+    # generate map
+    plt.scatter(x_coord_list,z_coord_list)
+    # define current datetime for saving file
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    filename = now + " Map"
+    plt.savefig("/Plots/test.png")
 
     # generate embed object for display
     embed_object = discord.Embed(title="Coordinates List",
@@ -258,6 +279,9 @@ async def on_message(ctx):
         imagecoords = ctx.message.attachments[0].url
         response = requests.get(imagecoords)
         imgfile = Image.open(io.BytesIO(response.content))
+
+        # train the
+
         text = pytesseract.image_to_string(imgfile)
         await ctx.send(f"The image you sent has the following text. \n{text}")
     else:
