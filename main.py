@@ -91,7 +91,7 @@ async def on_message(ctx):
         cursor = conn.cursor()
 
         # define sql for insertion
-        sql = "SELECT id, xCoord, yCoord, zCoord, description FROM minecraftCoords WHERE serverId=? ORDER BY id DESC"
+        sql = "SELECT id, xCoord, yCoord, zCoord, description FROM minecraftCoords WHERE serverId=? ORDER BY id ASC"
         data = (GUILD,)
 
         cursor.execute(sql, data)
