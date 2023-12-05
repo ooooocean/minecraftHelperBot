@@ -2,48 +2,18 @@
 
 import os
 import mariadb
-import sys
-import re
-import json
-import random
-
-# this loads the discord library
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
-from discord.ext.commands import Bot
 
-
-# import numpy for arrays
-import numpy as np
-
-# import csv for reading/writing to temporary DB
-from csv import writer
-
-# import datetime for date updates
-from datetime import datetime, timedelta
-from datetime import timezone
 
 # import re package to make data parsing easier
 import re
 
-# importing pandas for csv manipulation
-import pandas as pd
-
-# import time module for sleeps
-import time
-
-# this loads async
-import asyncio
-
-# math
-import math
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
-# database params
-
 database_params = {
     "user": os.getenv('USER'),
     "password": os.getenv('PASSWORD'),
