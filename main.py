@@ -100,11 +100,11 @@ async def on_message(ctx):
         # assemble embed fields
         coords_embed_list = []
         description_embed_list = []
-        id_list = []
+        db_id_list = []
         for item in cursor:
             coords_embed_list.append(str(item[1]) + ', ' + str(item[2]) + ', ' + str(item[3]))
             description_embed_list.append(item[4])
-            id_list.append(item[0])
+            db_id_list.append(item[0])
         print("Data obtained successfully.")
 
         # Close Connection
@@ -119,6 +119,9 @@ async def on_message(ctx):
     # generate embed object for display
     embed_object = discord.Embed(title="Coordinates List",
                                  description="this looks kind of boring...ping any suggestions over OWO")
+    embed_object.add_field(name='ID',
+                           value='\n'.join(db_id_list),
+                           inline=True)
     embed_object.add_field(name="Description",
                            value='\n'.join(description_embed_list),
                            inline=True)
