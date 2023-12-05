@@ -1,0 +1,8 @@
+beautifulsoup4==4.11.1
+lxml==4.9.1
+mariadb==1.1.8
+mysql-connector-python==8.2.0
+numpy==1.26.2
+packaging==23.2
+protobuf==4.21.12
+soupsieve==2.3.2.post1
