@@ -41,10 +41,6 @@ async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
 
-@bot.command()
-async def test(ctx):
-    await ctx.send('test passed')
-
 # converts overworld coords to nether coords
 @bot.command(name='convert', description="Converts overworld coordinates to Nether coordinates.")
 async def on_message(ctx):
