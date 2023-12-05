@@ -194,7 +194,7 @@ async def on_message(ctx):
 
     # remove command text for parsing
     coords_id = message_content.replace(command, '')
-
+    coords_id = coords_id.strip()
     # define function to check message format
     def check_string_format_coords_id(string):
         pattern = '\d*'
