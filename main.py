@@ -120,7 +120,7 @@ async def on_message(ctx):
     embed_object = discord.Embed(title="Coordinates List",
                                  description="this looks kind of boring...ping any suggestions over OWO")
     embed_object.add_field(name='ID',
-                           value='\n'.join(db_id_list),
+                           value='\n'.join([str(x) for x in db_id_list]),
                            inline=True)
     embed_object.add_field(name="Description",
                            value='\n'.join(description_embed_list),
