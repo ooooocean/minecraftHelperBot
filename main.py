@@ -108,6 +108,11 @@ async def on_message(ctx):
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
 
+@bot.command(name='coordslist')
+async def on_message(ctx):
+    embed_object = discord.Embed(title="test title",
+                                 description= "test description")
+    await ctx.send(embed=embed_object)
 
 
 bot.run(TOKEN)
