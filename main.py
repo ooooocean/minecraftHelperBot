@@ -50,7 +50,7 @@ async def on_message(ctx):
         if re.match(pattern, string):
             return (True)
 
-    print("coords command triggered")
+    print("Coordinate convert command triggered.")
 
     # write the message to a variable
     message_content = ctx.message.content
@@ -75,6 +75,7 @@ async def on_message(ctx):
         nether_coords = map(str, nether_coords)
         nether_coords_text = ', '.join(nether_coords)
         await ctx.send("Nether coords are:\n" + nether_coords_text)
+        print(f"Success - converted overworld coords {overworld_coords_text} to nether coords {nether_coords_text}.")
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
 
