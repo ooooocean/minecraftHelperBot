@@ -42,11 +42,14 @@ import math
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
-HOST = os.getenv('HOST')
-PORT = os.getenv('PORT')
-USER = os.getenv('USER')
-PASSWORD = os.getenv('PASSWORD')
-DATABASE = os.getenv('DATABASE')
+# database params
+
+database_params = {
+    "user": os.getenv('USER'),
+    "password": os.getenv('PASSWORD'),
+    "host": os.getenv('HOST'),
+    "database": os.getenv('DATABASE')
+}
 
 # allows for bot to detect all members belonging to the server.
 intents = discord.Intents.default()
@@ -77,8 +80,7 @@ async def test(ctx):
 async def coords(ctx):
     await ctx.send("Displaying list of coords.")
 
-
-
+# converts overworld coords to nether coords
 @bot.command(name='convert')
 async def on_message(ctx):
     # define function to check coords
@@ -122,8 +124,48 @@ async def on_message(ctx):
                                  description= "test description")
     await ctx.send(embed=embed_object)
 
-@bot.command(name='addcoord')
+@bot.command(name='addcoords')
 async def on_message(ctx):
-    await ctx.send("adding coordinates command triggered")
+    print("add coords command triggered")
+
+    # write the message to a variable
+    message_content = ctx.message.content
+
+    # define content to remove
+    command = bot_prefix + 'addcoords '
+
+    # remove command text for parsing
+    coords_info = message_content.replace(command, '')
+    # define function to check message format
+    def check_string_format_coords(string):
+        pattern = '-?\d+,-?\d+,-?\d+,.*'
+        if re.match(pattern, string):
+            return (True)
+
+    if check_string_format_coords(coords_info):
+        await ctx.send("valid info")
+    else:
+        await ctx.send("invalid info")
+
+    # Attempt connection
+    try:
+        conn = mariadb.connect(**database_params)
+
+        print(f"Connected!")
+
+        #cursor = conn.cursor()
+
+        #cursor.execute("SELECT * FROM alchemy_vials")
+
+        #for rows in cursor:
+        #    print(f"Retrieved the following: {rows}")
+
+        # Close Connection
+        conn.close()
+
+    except mariadb.Error as e:
+        print(f"Error connecting to the database: {e}")
+        await ctx.send("There was a problem connecting to the databse :(")
+
 
 bot.run(TOKEN)
