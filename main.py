@@ -5,9 +5,10 @@ import mariadb
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
-from PIL import image
 import pytesseract
-
+import io
+import requests
+from PIL import Image
 # import re package to make data parsing easier
 import re
 
@@ -21,6 +22,8 @@ database_params = {
     "host": os.getenv('HOST'),
     "database": os.getenv('DATABASE')
 }
+# assign path for tesseract
+pytesseract.pytesseract.tesseract_cmd=os.getenv('PYTESSERACTPATH')
 
 # allows for bot to detect all members belonging to the server.
 intents = discord.Intents.all()
@@ -234,9 +237,14 @@ async def on_message(ctx):
     else:
         await ctx.send("Please input in the format 'mc.deletecoords <id>'.")
 
-@bot.command(name='imgtocoords', description='Takes a inecraft image input and converts it to text.')
+@bot.command(name='imgtocoords', description='Takes a minecraft image input and converts it to text.')
 async def on_message(ctx):
-    imagecoords = ctx.message.attachment.url
-    print(imagecoords)
+    # extract url from attachment - only works if 1 attachment
+    imagecoords = ctx.message.attachments[0].url
+    response = requests.get(imagecoords)
+    imgfile = Image.open(io.BytesIO(response.content))
+    text = pytesseract.image_to_string(imgfile)
+    await ctx.send(f"The image you sent has the following text. \n{text}")
+
 
 bot.run(TOKEN)
