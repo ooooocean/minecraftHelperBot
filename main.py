@@ -251,12 +251,17 @@ async def on_message(ctx):
 @bot.command(name='imgtocoords',
              brief='Takes a minecraft image input and converts it to text.')
 async def on_message(ctx):
-    # extract url from attachment - only works if 1 attachment
-    imagecoords = ctx.message.attachments[0].url
-    response = requests.get(imagecoords)
-    imgfile = Image.open(io.BytesIO(response.content))
-    text = pytesseract.image_to_string(imgfile)
-    await ctx.send(f"The image you sent has the following text. \n{text}")
-
+    print("Image to coordinates function triggered.")
+    # for now, prevent extraction if there is more than one attachment
+    if len(ctx.message.attachments) == 1:
+        # extract url from attachment - only works if 1 attachment
+        imagecoords = ctx.message.attachments[0].url
+        response = requests.get(imagecoords)
+        imgfile = Image.open(io.BytesIO(response.content))
+        text = pytesseract.image_to_string(imgfile)
+        await ctx.send(f"The image you sent has the following text. \n{text}")
+    else:
+        await ctx.send("Please insert one image at a time.")
+        print("Message contained too many attachments - aborted command.\n----")
 
 bot.run(TOKEN)
