@@ -122,5 +122,8 @@ async def on_message(ctx):
                                  description= "test description")
     await ctx.send(embed=embed_object)
 
+@bot.command(name='addcoord')
+async def on_message(ctx):
+    await ctx.send("adding coordinates command triggered")
 
 bot.run(TOKEN)
