@@ -157,7 +157,7 @@ async def on_message(ctx):
 
     print("Final plot completed.")
 
-    plt.savefig("minecraftHelperBot/Map.png")
+    plt.savefig("Map.png")
     print("Starting save of plot into file.")
 
     # define plot directory
