@@ -128,7 +128,7 @@ async def on_message(ctx):
         print(f"Error connecting to the database: {e}")
         await ctx.send("There was a problem connecting to the database :(")
 
-    # generate map
+    # Generating map
     plt.scatter(x_coord_list,z_coord_list,
                 marker='+')
 
@@ -142,6 +142,15 @@ async def on_message(ctx):
     # add axes labels
     plt.xlabel("x")
     plt.ylabel("z", rotation=0)
+    # add ticks
+    plt.tick_params(axis='both',
+                    which='both',
+                    bottom = True,
+                    top = True,
+                    left = True,
+                    right = True,
+                    direction='in')
+
 
     plt.savefig("minecraftHelperBot/Plots/Map.png")
 
