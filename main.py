@@ -130,6 +130,10 @@ async def on_message(ctx):
 
     # generate map
     plt.scatter(x_coord_list,z_coord_list)
+    for i, txt in enumerate(description_list):
+        plt.annotate(txt, (x_coord_list[i],z_coord_list[i]))
+
+
     plt.savefig("minecraftHelperBot/Plots/Map.png")
 
     # generate embed object for display
