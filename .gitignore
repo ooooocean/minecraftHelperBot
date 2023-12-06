@@ -1,3 +1,2 @@
 /.env
-/Plots/*
-!/Plots/.gitkeep
+/Map.png
