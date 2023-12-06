@@ -87,7 +87,7 @@ async def on_message(ctx):
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
 
-@bot.command(name='listcoords', description="Lists saved coordinates.")
+@bot.command(name='coordslist', description="Lists saved coordinates.")
 async def on_message(ctx):
     print("List coordinates command triggered.")
     # connect to DB
@@ -194,7 +194,7 @@ async def on_message(ctx):
     os.remove(filename)
     print("Map deleted.\n------")
 
-@bot.command(name='addcoords', description="Adds coordinates in the format x,y,z,<description>.")
+@bot.command(name='coordsadd', description="Adds coordinates in the format x,y,z,<description>.")
 async def on_message(ctx):
     # write the message to a variable
     message_content = ctx.message.content
@@ -245,7 +245,7 @@ async def on_message(ctx):
     else:
         await ctx.send("Please input in the format 'x, y, z, <description>'.")
 
-@bot.command(name='deletecoords', description="Removes coordinates from the list by specifying the ID.")
+@bot.command(name='coordsdelete', description="Removes coordinates from the list by specifying the ID.")
 async def on_message(ctx):
     print('Delete coordinates function triggered.')
     # write the message to a variable
