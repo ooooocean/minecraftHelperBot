@@ -129,10 +129,19 @@ async def on_message(ctx):
         await ctx.send("There was a problem connecting to the database :(")
 
     # generate map
-    plt.scatter(x_coord_list,z_coord_list)
+    plt.scatter(x_coord_list,z_coord_list,
+                marker='+')
+
+    # add labels to data points
     for i, txt in enumerate(description_list):
         plt.annotate(txt, (x_coord_list[i],z_coord_list[i]))
 
+    # add origin axes
+    plt.axhline(0, color='black', linewidth=.2)
+    plt.axvline(0, color='black', linewidth=.2)
+    # add axes labels
+    plt.xlabel("x")
+    plt.ylabel("z", rotation=0)
 
     plt.savefig("minecraftHelperBot/Plots/Map.png")
 
