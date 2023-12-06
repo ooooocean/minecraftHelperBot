@@ -129,12 +129,12 @@ async def on_message(ctx):
         await ctx.send("There was a problem connecting to the database :(")
 
     # Generating map
-    plt.scatter(x_coord_list,z_coord_list,
+    plt.scatter(x_coord_list, z_coord_list,
                 marker='+')
 
     # add labels to data points
     for i, txt in enumerate(description_list):
-        plt.annotate(txt, (x_coord_list[i],z_coord_list[i]))
+        plt.annotate(txt, (x_coord_list[i], z_coord_list[i]))
 
     # add origin axes
     plt.axhline(0, color='black', linewidth=.2)
@@ -152,7 +152,7 @@ async def on_message(ctx):
                     direction='in')
 
 
-    plt.savefig("minecraftHelperBot/Plots/Map.png")
+    plt.savefig("minecraftHelperBot/Map.png")
 
     # generate embed object for display
     embed_object = discord.Embed(title="Coordinates List",
@@ -173,7 +173,7 @@ async def on_message(ctx):
     )
 
     # define plot directory
-    PLOT_DIR = os.path.join(ROOT_DIR,"Plots","Map.png")
+    PLOT_DIR = os.path.join(ROOT_DIR,"Map.png")
 
     embed_map = discord.File(PLOT_DIR, filename="Map.png")
     embed_object.set_image(url="attachment://Map.png")
