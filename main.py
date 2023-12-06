@@ -99,14 +99,11 @@ async def on_message(ctx):
 
         conn.commit()
         # assemble embed fields
-        coords_embed_list = []
-        description_embed_list = []
-        db_id_list = []
+        coords_embed_list, description_embed_list, db_id_list = []
 
         # define lists for plotting map
-        x_coord_list = []
-        z_coord_list = []
-        description_list = []
+        x_coord_list, z_coord_list, description_list = []
+
         for item in cursor:
             # generate coords list for map creation
             x_coord_list.append(item[1])
