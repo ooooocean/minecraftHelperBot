@@ -87,7 +87,7 @@ async def on_message(ctx):
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
 
-@bot.command(name='listcoords', description="Lists saved coordinates.")
+@bot.command(name='coordslist', description="Lists saved coordinates.")
 async def on_message(ctx):
     print("List coordinates command triggered.")
     # connect to DB
@@ -157,11 +157,12 @@ async def on_message(ctx):
 
     print("Final plot completed.")
 
-    plt.savefig("minecraftHelperBot/Map.png")
+    filename = "map.png"
+    plt.savefig(filename)
     print("Starting save of plot into file.")
 
     # define plot directory
-    PLOT_DIR = os.path.join(ROOT_DIR, "Map.png")
+    PLOT_DIR = os.path.join(ROOT_DIR, filename)
 
     # check if file does not exist and if so, wait until it does
     if os.path.exists(PLOT_DIR) is False:
@@ -182,18 +183,18 @@ async def on_message(ctx):
                            value='\n'.join(coords_embed_list),
                            inline=True)
 
-    embed_map = discord.File(PLOT_DIR, filename="Map.png")
-    embed_object.set_image(url="attachment://Map.png")
+    embed_map = discord.File(PLOT_DIR, filename=filename)
+    embed_object.set_image(url="attachment://" + filename)
 
     embed_object.set_thumbnail(url="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/7c15a5ea-0f0a-4641-a73b-f504324da8ed/d4v2t3p-5bca9982-2e12-49bd-b821-d17e226b94ab.png/v1/fill/w_900,h_506,q_75,strp/minecraft_map_by_theswedishswede-d4v2t3p.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwic3ViIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS5vcGVyYXRpb25zIl0sIm9iaiI6W1t7InBhdGgiOiIvZi83YzE1YTVlYS0wZjBhLTQ2NDEtYTczYi1mNTA0MzI0ZGE4ZWQvZDR2MnQzcC01YmNhOTk4Mi0yZTEyLTQ5YmQtYjgyMS1kMTdlMjI2Yjk0YWIucG5nIiwid2lkdGgiOiI8PTkwMCIsImhlaWdodCI6Ijw9NTA2In1dXX0.pRk4hg347bq3tYPDGl76EuZixO5JTr_6_PG0V8vrZ64")
     await ctx.send(embed=embed_object,
                    file=embed_map)
     print("Message sent with list of coordinates and map.")
     # remove map file
-    os.remove(PLOT_DIR)
+    os.remove(filename)
     print("Map deleted.\n------")
 
-@bot.command(name='addcoords', description="Adds coordinates in the format x,y,z,<description>.")
+@bot.command(name='coordsadd', description="Adds coordinates in the format x,y,z,<description>.")
 async def on_message(ctx):
     # write the message to a variable
     message_content = ctx.message.content
@@ -244,7 +245,7 @@ async def on_message(ctx):
     else:
         await ctx.send("Please input in the format 'x, y, z, <description>'.")
 
-@bot.command(name='deletecoords', description="Removes coordinates from the list by specifying the ID.")
+@bot.command(name='coordsdelete', description="Removes coordinates from the list by specifying the ID.")
 async def on_message(ctx):
     print('Delete coordinates function triggered.')
     # write the message to a variable
