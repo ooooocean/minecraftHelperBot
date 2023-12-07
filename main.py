@@ -1,15 +1,14 @@
 # minecraftHelperBot
 
 import os
+import time
+import re
 import mariadb
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 import matplotlib.pyplot as plt
-import time
 
-# import re package to make data parsing easier
-import re
 
 
 load_dotenv()
@@ -55,7 +54,7 @@ async def on_message(ctx):
     def check_string_format_coords(string):
         pattern = '-?\d+,-?\d+,-?\d+'
         if re.match(pattern, string):
-            return (True)
+            return True
 
     print("Coordinate convert command triggered.")
 
@@ -82,7 +81,8 @@ async def on_message(ctx):
         nether_coords = map(str, nether_coords)
         nether_coords_text = ', '.join(nether_coords)
         await ctx.send("Nether coords are:\n" + nether_coords_text)
-        print(f"Success - converted overworld coords {overworld_coords_text} to nether coords {nether_coords_text}.")
+        print(f"Success - converted overworld coords {overworld_coords_text} "
+              f"to nether coords {nether_coords_text}.")
         print("-----")
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
@@ -93,12 +93,15 @@ async def on_message(ctx):
     # connect to DB
     try:
         conn = mariadb.connect(**database_params)
-        print(f"Connected to DB.")
+        print("Connected to DB.")
 
         cursor = conn.cursor()
 
         # define sql for insertion
-        sql = "SELECT id, xCoord, yCoord, zCoord, description FROM minecraftCoords WHERE serverId=? ORDER BY id ASC"
+        sql = "SELECT id, xCoord, yCoord, zCoord, description " \
+              "FROM minecraftCoords " \
+              "WHERE serverId=? " \
+              "ORDER BY id ASC"
         data = (GUILD,)
 
         cursor.execute(sql, data)
@@ -172,7 +175,8 @@ async def on_message(ctx):
 
     # generate embed object for display
     embed_object = discord.Embed(title="Coordinates List",
-                                 description="this looks kind of boring...ping any suggestions over OWO")
+                                 description='this looks kind of boring...'
+                                             'ping any suggestions over OWO')
     embed_object.add_field(name='ID',
                            value='\n'.join([str(x) for x in db_id_list]),
                            inline=True)
@@ -200,7 +204,7 @@ async def on_message(ctx):
     message_content = ctx.message.content
 
     # define content to remove
-    command = bot_prefix + 'addcoords '
+    command = bot_prefix + 'coordsadd '
 
     # remove command text for parsing
     coords_info = message_content.replace(command, '')
@@ -208,7 +212,7 @@ async def on_message(ctx):
     def check_string_format_coords(string):
         pattern = '-?\d+,-?\d+,-?\d+,.*'
         if re.match(pattern, string):
-            return (True)
+            return True
 
     if check_string_format_coords(coords_info):
         # convert string to list
@@ -218,13 +222,14 @@ async def on_message(ctx):
         # Attempt connection
         try:
             conn = mariadb.connect(**database_params)
-            print(f"Connected to DB. Inserting the following data:")
+            print("Connected to DB. Inserting the following data:")
             print(coords_info_list)
 
             cursor = conn.cursor()
 
             # define sql for insertion
-            sql = "INSERT INTO minecraftCoords (serverId, xCoord, yCoord, zCoord, description) VALUES (?,?,?,?,?)"
+            sql = "INSERT INTO minecraftCoords (serverId, xCoord, yCoord, zCoord, description) " \
+                  "VALUES (?,?,?,?,?)"
             data = (GUILD,coords_info_list[0],coords_info_list[1],coords_info_list[2],coords_info_list[3])
 
             cursor.execute(sql,data)
@@ -236,7 +241,8 @@ async def on_message(ctx):
             conn.close()
             print("Connection closed.")
 
-            await ctx.send("Your coordinates have been successfully saved! Please run mc.coordslist to see the updated list.")
+            await ctx.send("Your coordinates have been successfully saved! "
+                           "Please run mc.coordslist to see the updated list.")
 
         except mariadb.Error as e:
             print(f"Error connecting to the database: {e}")
@@ -261,13 +267,13 @@ async def on_message(ctx):
     def check_string_format_coords_id(string):
         pattern = '\d*'
         if re.match(pattern, string):
-            return (True)
+            return True
 
     if check_string_format_coords_id(coords_id):
         # Attempt connection
         try:
             conn = mariadb.connect(**database_params)
-            print(f"Connected to DB. Inserting the following data:")
+            print("Connected to DB. Inserting the following data:")
 
             cursor = conn.cursor()
 
