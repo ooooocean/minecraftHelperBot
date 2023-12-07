@@ -41,6 +41,9 @@ bot = commands.Bot(command_prefix=BOT_PREFIX.lower(), intents=intents)
 # get the server
 localServer = discord.utils.get(client.guilds, id=GUILD)
 
+# define global variable outside of functions
+global msg
+msg =''
 
 @bot.event
 async def on_ready():
@@ -152,16 +155,20 @@ async def on_message(ctx): # pylint: disable=function-redefined
                            value='\n'.join(coords_embed_list),
                            inline=True)
 
-    # Return the message object and make it global for use in separate function
-    global msg
+    # Return the message object
     msg = await ctx.send(embed=embed_object)
     await msg.add_reaction('🗺️')
-    print("Message sent with list of coordinates and map.\n"
+    print("Message sent with list of coordinates.\n"
           "------")
 
 @bot.event
 async def on_raw_reaction_add(ctx):
+    # Check that msg var has been populated.
+    if not msg:
+        return
     # Check that reaction was not provided by the bot
+    if ctx.user_id == msg.author.id:
+        return
     # Check that reaction is on the last instance of the coords list command message.
     if msg.id == ctx.message_id:
         # Check that
