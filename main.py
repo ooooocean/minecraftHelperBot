@@ -141,8 +141,7 @@ async def on_message(ctx): # pylint: disable=function-redefined
         await ctx.send("There was a problem connecting to the database :(")
 
     embed_object = discord.Embed(title="Coordinates List",
-                                 description='this looks kind of boring...'
-                                             'ping any suggestions over OWO')
+                                 description='React with 🗺️ to generate the map!')
     embed_object.add_field(name='ID',
                            value='\n'.join([str(x) for x in db_id_list]),
                            inline=True)
@@ -153,17 +152,23 @@ async def on_message(ctx): # pylint: disable=function-redefined
                            value='\n'.join(coords_embed_list),
                            inline=True)
 
+    # Return the message object and make it global for use in separate function
+    global msg
     msg = await ctx.send(embed=embed_object)
+    await msg.add_reaction('🗺️')
     print("Message sent with list of coordinates and map.\n"
           "------")
-    # Return the message object and make it global for use in separate function
-    global embed_message
-    embed_message = msg
-    return embed_message
 
 @bot.event
 async def on_raw_reaction_add(ctx):
-    print(embed_message)
+    # Check that reaction was not provided by the bot
+    # Check that reaction is on the last instance of the coords list command message.
+    if msg.id == ctx.message_id:
+        # Check that
+        print("Reacted to correct message")
+    else:
+        print("Reacted to wrong message.")
+
 
 #
 # # Generating map
