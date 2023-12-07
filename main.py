@@ -6,8 +6,8 @@ import math
 import re
 import mariadb
 import discord
-from dotenv import load_dotenv
 from discord.ext import commands
+from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 
 load_dotenv()
@@ -150,28 +150,32 @@ async def on_message(ctx):
 
         distance_list = []
         for item in data:
+            coords = ', '.join(([str(item[1]), str(item[2]), str(item[3])]))
             distance_list.append([item[0],
-                                  item[1],
-                                  item[2],
-                                  item[3],
+                                  coords,
                                   item[4],
                                   math.dist((overworld_coords[0], overworld_coords[2]), (item[1], item[3]))])
 
-        def min_distance_location(inputlist):
-            location = []
-            for i, item in enumerate(inputlist):
-                if i == 0:
-                    location = item
-                else:
-                    if int(location[5]) >= int(item[5]):
-                        location = item
-            return location
+        distance_list.sort(key = lambda row: row[3])
+        print(distance_list)
 
-        location = min_distance_location(distance_list)
+        # generate embed for sorted list
 
-        await ctx.send(f"The closest location to you is the following.\n\n"
-                       f"Description: {location[4]}\n"
-                       f"{location[1]}, {location[2]}, {location[3]}")
+        embed_object = discord.Embed(title="Coordinates List (sorted by distance desc.)",
+                                     description='React with 🗺️ to generate the map!')
+        embed_object.add_field(name='ID',
+                               value='\n'.join([str(x[0]) for x in distance_list]),
+                               inline=True)
+        embed_object.add_field(name="Description",
+                               value='\n'.join(str(x[2]) for x in distance_list),
+                               inline=True)
+        embed_object.add_field(name="Coords",
+                               value='\n'.join(str(x[1]) for x in distance_list),
+                               inline=True)
+
+        # Return the message object
+        await ctx.send(embed=embed_object)
+
 
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
