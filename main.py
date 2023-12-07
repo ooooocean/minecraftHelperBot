@@ -153,15 +153,17 @@ async def on_message(ctx): # pylint: disable=function-redefined
                            value='\n'.join(coords_embed_list),
                            inline=True)
 
-    await ctx.send(embed=embed_object)
+    msg = await ctx.send(embed=embed_object)
     print("Message sent with list of coordinates and map.\n"
           "------")
-    # Return the message object for use in separate function
-    embed_message = ctx.message
-
+    # Return the message object and make it global for use in separate function
+    global embed_message
+    embed_message = msg
     return embed_message
 
-
+@bot.event
+async def on_raw_reaction_add(ctx):
+    print(embed_message)
 
 #
 # # Generating map
