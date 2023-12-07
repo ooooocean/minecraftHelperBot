@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 from discord.ext import commands
 import matplotlib.pyplot as plt
 
-
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
@@ -43,7 +42,29 @@ localServer = discord.utils.get(client.guilds, id=GUILD)
 
 # define global variable outside of functions
 global msg
-msg =''
+msg = ''
+
+
+# define function to get data from database
+def get_data_from_database(sql, data):
+    print("Initating connection to database.")
+    try:
+        conn = mariadb.connect(**database_params)
+        print("Connected to database.")
+
+        cursor = conn.cursor()
+        # execute SQL query with given parameters
+        cursor.execute(sql, data)
+
+        query_results = []
+        for item in cursor:
+            query_results.append(item)
+
+        return query_results
+
+    except mariadb.Error as e:
+        print(f"Error connecting to the database: {e}")
+
 
 @bot.event
 async def on_ready():
@@ -98,7 +119,7 @@ async def on_message(ctx):
 
 
 @bot.command(name='coordslist', description="Lists saved coordinates.")
-async def on_message(ctx): # pylint: disable=function-redefined
+async def on_message(ctx):  # pylint: disable=function-redefined
     """Lists saved coordinates by pulling from database and generates a map with the coordinates."""
     print("List coordinates command triggered.")
     # connect to DB
@@ -156,25 +177,96 @@ async def on_message(ctx): # pylint: disable=function-redefined
                            inline=True)
 
     # Return the message object
+    global msg
     msg = await ctx.send(embed=embed_object)
+
     await msg.add_reaction('🗺️')
     print("Message sent with list of coordinates.\n"
           "------")
 
-@bot.event
-async def on_raw_reaction_add(ctx):
-    # Check that msg var has been populated.
-    if not msg:
-        return
-    # Check that reaction was not provided by the bot
-    if ctx.user_id == msg.author.id:
-        return
-    # Check that reaction is on the last instance of the coords list command message.
-    if msg.id == ctx.message_id:
-        # Check that
-        print("Reacted to correct message")
-    else:
-        print("Reacted to wrong message.")
+
+# @bot.event
+# async def on_reaction_add(reaction, user):
+#     # Check that msg var has been populated.
+#     if not msg:
+#         print('List Coords message has not been sent since last reset.')
+#         return
+#     # Check that reaction was not provided by the bot
+#     if user.id == msg.author.id:
+#         print("Emoji reacted by bot - ignore.")
+#         return
+#     # Check that reaction is on the last instance of the coords list command message
+#     if msg.id == reaction.message.id:
+#         print("Reacted message is the correct message")
+#         # Check that emoji used is map emoji
+#         if reaction.emoji == '🗺️':
+#             print("Reacted message has the correct emoji")
+#
+#             # define SQL for retrieval
+#             sql = "SELECT id, xCoord, yCoord, zCoord, description " \
+#                   "FROM minecraftCoords " \
+#                   "WHERE serverId=? " \
+#                   "ORDER BY id ASC"
+#             data = get_data_from_database(sql, (GUILD,))
+#
+#             # generate plot
+#             plt.scatter([item[1] for item in data],
+#                         [item[3] for item in data],
+#                         marker='+')
+#
+#             # add point markers
+#             for item in data:
+#                 print(item)
+#                 plt.annotate(item[4], (item[1], item[3]))
+#
+#             # add origin axes
+#             plt.axhline(0, color='black', linewidth=.2)
+#             plt.axvline(0, color='black', linewidth=.2)
+#             # add axes labels
+#             plt.xlabel("x")
+#             plt.ylabel("z", rotation=0)
+#             # add ticks
+#             plt.tick_params(axis='both',
+#                             which='both',
+#                             bottom=True,
+#                             top=True,
+#                             left=True,
+#                             right=True,
+#                             direction='in')
+#
+#             print("Final plot completed.")
+#
+#             filename = "map.png"
+#             plt.savefig(filename)
+#             print("Starting save of plot into file.")
+#
+#             # define plot directory
+#             plot_dir = os.path.join(ROOT_DIR, filename)
+#
+#             # check if file does not exist and if so, wait until it does
+#             if os.path.exists(plot_dir) is False:
+#                 print("File has not been generated, waiting for file to generate.")
+#                 while os.path.exists(plot_dir) is False:
+#                     time.sleep(0.1)
+#
+#             # extract initial embed from msg
+#             new_embed_object = msg.embeds[0]
+#
+#
+#             # generate map for display in embed
+#             embed_map = discord.File(plot_dir, filename=filename)
+#             new_embed_object.set_image(url="attachment://" + filename)
+#
+#             # edit message with map
+#             await msg.edit(embed=new_embed_object, attachments=[embed_map])
+#
+#             # remove map file
+#             # os.remove(filename)
+#             # print("Map deleted.\n------")
+#         else:
+#             print("Reacted to correct message with wrong emoji")
+#     else:
+#         print("Reacted to wrong message.")
 
 
 #
@@ -225,7 +317,7 @@ async def on_raw_reaction_add(ctx):
 # print("Map deleted.\n------")
 
 @bot.command(name='coordsadd', description="Adds coordinates in the format x,y,z,<description>.")
-async def on_message(ctx): # pylint: disable=function-redefined
+async def on_message(ctx):  # pylint: disable=function-redefined
     """Takes coordinates in the format x, y, z, <description> and saves it to the database."""
     # write the message to a variable
     message_content = ctx.message.content
@@ -285,7 +377,7 @@ async def on_message(ctx): # pylint: disable=function-redefined
 
 @bot.command(name='coordsdelete', description="Removes coordinates from the list"
                                               " by specifying the ID.")
-async def on_message(ctx): # pylint: disable=function-redefined
+async def on_message(ctx):  # pylint: disable=function-redefined
     """Function that takes in an ID from the coordinate list and deletes it from the database."""
     print('Delete coordinates function triggered.')
     # write the message to a variable
