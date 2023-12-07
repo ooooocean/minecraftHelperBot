@@ -2,6 +2,7 @@
 """A Discord bot that provides a variety of functions to improve QoL when playing Minecraft."""
 import os
 import time
+import math
 import re
 import mariadb
 import discord
@@ -45,16 +46,29 @@ global msg
 msg = ''
 
 
+# define function to check coords
+def check_string_format_coords(string):
+    pattern = r'-?\d+,-?\d+,-?\d+'
+    if re.match(pattern, string):
+        return True
+    return False
+
+
 # define function to get data from database
-def get_data_from_database(sql, data):
+def get_data_from_database():
     print("Initating connection to database.")
     try:
         conn = mariadb.connect(**database_params)
         print("Connected to database.")
 
+        sql = "SELECT id, xCoord, yCoord, zCoord, description " \
+              "FROM minecraftCoords " \
+              "WHERE serverId=? " \
+              "ORDER BY id ASC"
+
         cursor = conn.cursor()
         # execute SQL query with given parameters
-        cursor.execute(sql, data)
+        cursor.execute(sql, (GUILD,))
 
         query_results = []
         for item in cursor:
@@ -79,13 +93,6 @@ async def on_message(ctx):
     """Function that takes coordinates in the format x, y, z
     and divides them by 8 to obtain Nether coordinates."""
 
-    # define function to check coords
-    def check_string_format_coords(string):
-        pattern = r'-?\d+,-?\d+,-?\d+'
-        if re.match(pattern, string):
-            return True
-        return False
-
     print("Coordinate convert command triggered.")
 
     # write the message to a variable
@@ -97,7 +104,6 @@ async def on_message(ctx):
     # remove command text for parsing
     overworld_coords_text = message_content.replace(command, '')
     overworld_coords_text = overworld_coords_text.replace(" ", "")
-    print(overworld_coords_text)
     # check if coords are in the right format
     if check_string_format_coords(overworld_coords_text):
         # convert coords to list
@@ -114,6 +120,59 @@ async def on_message(ctx):
         print(f"Success - converted overworld coords {overworld_coords_text} "
               f"to nether coords {nether_coords_text}.")
         print("-----")
+    else:
+        await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
+
+
+@bot.command(name='coordsfind')
+async def on_message(ctx):
+    """Takes in a set of coordinates and finds the closest location """
+    print("Locate closest location command triggered.")
+
+    # write the message to a variable
+    message_content = ctx.message.content
+
+    # define content to remove
+    command = BOT_PREFIX + 'coordsfind '
+
+    # remove command text for parsing
+    overworld_coords_text = message_content.replace(command, '')
+    overworld_coords_text = overworld_coords_text.replace(" ", "")
+
+    # check if coords are in the right format
+    if check_string_format_coords(overworld_coords_text):
+        # convert coords to list
+        overworld_coords = overworld_coords_text.split(',')
+        overworld_coords = list(map(int, overworld_coords))
+
+        # extract data from database
+        data = get_data_from_database()
+
+        distance_list = []
+        for item in data:
+            distance_list.append([item[0],
+                                  item[1],
+                                  item[2],
+                                  item[3],
+                                  item[4],
+                                  math.dist((overworld_coords[0], overworld_coords[2]), (item[1], item[3]))])
+
+        def min_distance_location(inputlist):
+            location = []
+            for i, item in enumerate(inputlist):
+                if i == 0:
+                    location = item
+                else:
+                    if int(location[5]) >= int(item[5]):
+                        location = item
+            return location
+
+        location = min_distance_location(distance_list)
+
+        await ctx.send(f"The closest location to you is the following.\n\n"
+                       f"Description: {location[4]}\n"
+                       f"{location[1]}, {location[2]}, {location[3]}")
+
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
 
