@@ -41,13 +41,9 @@ bot = commands.Bot(command_prefix=BOT_PREFIX.lower(), intents=intents)
 # get the server
 localServer = discord.utils.get(client.guilds, id=GUILD)
 
-# define global variable outside of functions
-global msg
-msg = ''
-
-
 # define function to check coords
 def check_string_format_coords(string):
+    """Checks a string to see if it is in the format x, y, z."""
     pattern = r'-?\d+,-?\d+,-?\d+'
     if re.match(pattern, string):
         return True
@@ -56,6 +52,7 @@ def check_string_format_coords(string):
 
 # define function to get data from database
 def get_data_from_database():
+    """Gets all information from the coordinates DB."""
     print("Initating connection to database.")
     try:
         conn = mariadb.connect(**database_params)
@@ -74,11 +71,44 @@ def get_data_from_database():
         for item in cursor:
             query_results.append(item)
 
-        return query_results
-
     except mariadb.Error as e:
         print(f"Error connecting to the database: {e}")
 
+    return query_results
+
+def generate_map(x_coords, z_coords, labels, filename):
+    """Generates map for given coordinates and labels, saving them into a file."""
+    print("Triggered map generation function.")
+    # generate plot
+    fig = plt
+    fig.scatter(list(x_coords),
+                list(z_coords),
+                marker='+')
+
+    # add point markers
+    for i, item in enumerate(labels):
+        plt.annotate(item, (x_coords[i], z_coords[i]))
+
+    # add origin axes
+    fig.axhline(0, color='black', linewidth=.2)
+    fig.axvline(0, color='black', linewidth=.2)
+    # add axes labels
+    fig.xlabel("x")
+    fig.ylabel("z", rotation=0)
+    # add ticks
+    fig.tick_params(axis='both',
+                    which='both',
+                    bottom=True,
+                    top=True,
+                    left=True,
+                    right=True,
+                    direction='in')
+
+    print("Final plot completed.")
+
+    fig.savefig(filename)
+    print("Saving file.\n")
+    return fig
 
 @bot.event
 async def on_ready():
@@ -123,20 +153,16 @@ async def on_message(ctx):
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
 
-
 @bot.command(name='coordsfind')
-async def on_message(ctx):
+async def on_message(ctx): # pylint: disable=function-redefined
     """Takes in a set of coordinates and finds the closest location """
     print("Locate closest location command triggered.")
-
-    # write the message to a variable
-    message_content = ctx.message.content
 
     # define content to remove
     command = BOT_PREFIX + 'coordsfind '
 
     # remove command text for parsing
-    overworld_coords_text = message_content.replace(command, '')
+    overworld_coords_text = ctx.message.content.replace(command, '')
     overworld_coords_text = overworld_coords_text.replace(" ", "")
 
     # check if coords are in the right format
@@ -147,22 +173,21 @@ async def on_message(ctx):
 
         # extract data from database
         data = get_data_from_database()
-
         distance_list = []
         for item in data:
             coords = ', '.join(([str(item[1]), str(item[2]), str(item[3])]))
             distance_list.append([item[0],
                                   coords,
                                   item[4],
-                                  math.dist((overworld_coords[0], overworld_coords[2]), (item[1], item[3]))])
+                                  math.dist((overworld_coords[0], overworld_coords[2]),
+                                            (item[1], item[3]))])
 
         distance_list.sort(key = lambda row: row[3])
-        print(distance_list)
 
         # generate embed for sorted list
 
         embed_object = discord.Embed(title="Coordinates List (sorted by distance desc.)",
-                                     description='React with 🗺️ to generate the map!')
+                                     description='meep morp')
         embed_object.add_field(name='ID',
                                value='\n'.join([str(x[0]) for x in distance_list]),
                                inline=True)
@@ -173,211 +198,88 @@ async def on_message(ctx):
                                value='\n'.join(str(x[1]) for x in distance_list),
                                inline=True)
 
-        # Return the message object
-        await ctx.send(embed=embed_object)
+        # insert user location into data list
+        data.insert(0, ('',
+                        overworld_coords[0],
+                        overworld_coords[1],
+                        overworld_coords[2],
+                        "YOU"))
 
+        filename = 'sortedmap.png'
+        fig = generate_map([row[1] for row in data],
+                     [row[3] for row in data],
+                     [row[4] for row in data],
+                     filename)
+
+        plot_dir = os.path.join(ROOT_DIR, filename)
+
+        # generate map for display in embed
+        embed_map = discord.File(plot_dir, filename=filename)
+        embed_object.set_image(url="attachment://" + filename)
+
+        # remove the inserted element
+        del data[0]
+        fig.close()
+
+        # Return the message object
+        await ctx.send(embed=embed_object,
+                       file = embed_map)
+
+        os.remove(filename)
+        print("Map deleted.\n------")
 
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
-
 
 @bot.command(name='coordslist', description="Lists saved coordinates.")
 async def on_message(ctx):  # pylint: disable=function-redefined
     """Lists saved coordinates by pulling from database and generates a map with the coordinates."""
     print("List coordinates command triggered.")
-    # connect to DB
-    try:
-        conn = mariadb.connect(**database_params)
-        print("Connected to DB.")
+    # get data from database
+    data = get_data_from_database()
 
-        cursor = conn.cursor()
+    filename = 'map.png'
 
-        # define sql for insertion
-        sql = "SELECT id, xCoord, yCoord, zCoord, description " \
-              "FROM minecraftCoords " \
-              "WHERE serverId=? " \
-              "ORDER BY id ASC"
+    # generate map from extracted data
+    generate_map([row[1] for row in data],
+                 [row[3] for row in data],
+                 [row[4] for row in data],
+                 filename)
 
-        cursor.execute(sql, (GUILD,))
-        conn.commit()
-        # assemble embed fields
-        coords_embed_list, description_embed_list, db_id_list = ([] for i in range(3))
+    # define plot directory
+    plot_dir = os.path.join(ROOT_DIR, filename)
 
-        # define lists for plotting map
-        x_coord_list, z_coord_list, description_list = ([] for i in range(3))
-
-        for item in cursor:
-            # generate coords list for map creation
-            x_coord_list.append(item[1])
-            z_coord_list.append(item[3])
-            description_list.append(item[4])
-
-            # generate data for embed
-            coords_embed_list.append(str(item[1]) + ', ' + str(item[2]) + ', ' + str(item[3]))
-            description_embed_list.append(item[4])
-            db_id_list.append(item[0])
-        print("Data obtained successfully.")
-
-        # Close Connection
-        cursor.close()
-        conn.close()
-        print("Connection closed.")
-
-    except mariadb.Error as e:
-        print(f"Error connecting to the database: {e}")
-        await ctx.send("There was a problem connecting to the database :(")
+    # check if file does not exist and if so, wait until it does
+    if os.path.exists(plot_dir) is False:
+        print("File has not been generated, waiting for file to generate.")
+        while os.path.exists(plot_dir) is False:
+            time.sleep(0.1)
 
     embed_object = discord.Embed(title="Coordinates List",
-                                 description='React with 🗺️ to generate the map!')
+                                 description='meep')
+
+    # generate map for display in embed
+    embed_map = discord.File(plot_dir, filename=filename)
+    embed_object.set_image(url="attachment://" + filename)
+
     embed_object.add_field(name='ID',
-                           value='\n'.join([str(x) for x in db_id_list]),
+                           value='\n'.join([str(x[0]) for x in data]),
                            inline=True)
     embed_object.add_field(name="Description",
-                           value='\n'.join(description_embed_list),
+                           value='\n'.join(str(x[2]) for x in data),
                            inline=True)
     embed_object.add_field(name="Coords",
-                           value='\n'.join(coords_embed_list),
+                           value='\n'.join(str(x[1]) for x in data),
                            inline=True)
+    embed_object.set_image(url="attachment://" + filename)
 
     # Return the message object
-    global msg
-    msg = await ctx.send(embed=embed_object)
+    await ctx.send(embed=embed_object,
+                   file=embed_map)
+    print("Message sent with list of coordinates")
 
-    await msg.add_reaction('🗺️')
-    print("Message sent with list of coordinates.\n"
-          "------")
-
-
-# @bot.event
-# async def on_reaction_add(reaction, user):
-#     # Check that msg var has been populated.
-#     if not msg:
-#         print('List Coords message has not been sent since last reset.')
-#         return
-#     # Check that reaction was not provided by the bot
-#     if user.id == msg.author.id:
-#         print("Emoji reacted by bot - ignore.")
-#         return
-#     # Check that reaction is on the last instance of the coords list command message
-#     if msg.id == reaction.message.id:
-#         print("Reacted message is the correct message")
-#         # Check that emoji used is map emoji
-#         if reaction.emoji == '🗺️':
-#             print("Reacted message has the correct emoji")
-#
-#             # define SQL for retrieval
-#             sql = "SELECT id, xCoord, yCoord, zCoord, description " \
-#                   "FROM minecraftCoords " \
-#                   "WHERE serverId=? " \
-#                   "ORDER BY id ASC"
-#             data = get_data_from_database(sql, (GUILD,))
-#
-#             # generate plot
-#             plt.scatter([item[1] for item in data],
-#                         [item[3] for item in data],
-#                         marker='+')
-#
-#             # add point markers
-#             for item in data:
-#                 print(item)
-#                 plt.annotate(item[4], (item[1], item[3]))
-#
-#             # add origin axes
-#             plt.axhline(0, color='black', linewidth=.2)
-#             plt.axvline(0, color='black', linewidth=.2)
-#             # add axes labels
-#             plt.xlabel("x")
-#             plt.ylabel("z", rotation=0)
-#             # add ticks
-#             plt.tick_params(axis='both',
-#                             which='both',
-#                             bottom=True,
-#                             top=True,
-#                             left=True,
-#                             right=True,
-#                             direction='in')
-#
-#             print("Final plot completed.")
-#
-#             filename = "map.png"
-#             plt.savefig(filename)
-#             print("Starting save of plot into file.")
-#
-#             # define plot directory
-#             plot_dir = os.path.join(ROOT_DIR, filename)
-#
-#             # check if file does not exist and if so, wait until it does
-#             if os.path.exists(plot_dir) is False:
-#                 print("File has not been generated, waiting for file to generate.")
-#                 while os.path.exists(plot_dir) is False:
-#                     time.sleep(0.1)
-#
-#             # extract initial embed from msg
-#             new_embed_object = msg.embeds[0]
-#
-#
-#             # generate map for display in embed
-#             embed_map = discord.File(plot_dir, filename=filename)
-#             new_embed_object.set_image(url="attachment://" + filename)
-#
-#             # edit message with map
-#             await msg.edit(embed=new_embed_object, attachments=[embed_map])
-#
-#             # remove map file
-#             # os.remove(filename)
-#             # print("Map deleted.\n------")
-#         else:
-#             print("Reacted to correct message with wrong emoji")
-#     else:
-#         print("Reacted to wrong message.")
-
-
-#
-# # Generating map
-#     plt.scatter(x_coord_list, z_coord_list,
-#                 marker='+')
-#     print("Initial plot generated.")
-#
-#     # add labels to data points
-#     for i, txt in enumerate(description_list):
-#         plt.annotate(txt, (x_coord_list[i], z_coord_list[i]))
-#
-#     # add origin axes
-#     plt.axhline(0, color='black', linewidth=.2)
-#     plt.axvline(0, color='black', linewidth=.2)
-#     # add axes labels
-#     plt.xlabel("x")
-#     plt.ylabel("z", rotation=0)
-#     # add ticks
-#     plt.tick_params(axis='both',
-#                     which='both',
-#                     bottom=True,
-#                     top=True,
-#                     left=True,
-#                     right=True,
-#                     direction='in')
-#
-#     print("Final plot completed.")
-#
-#     filename = "map.png"
-#     plt.savefig(filename)
-#     print("Starting save of plot into file.")
-#
-#     # define plot directory
-#     plot_dir = os.path.join(ROOT_DIR, filename)
-#
-#     # check if file does not exist and if so, wait until it does
-#     if os.path.exists(plot_dir) is False:
-#         print("File has not been generated, waiting for file to generate.")
-#         while os.path.exists(plot_dir) is False:
-#             time.sleep(0.1)
-#
-# generate embed object for display
-#    embed_map = discord.File(plot_dir, filename=filename)
-#   embed_object.set_image(url="attachment://" + filename)
-# remove map file
-# os.remove(filename)
-# print("Map deleted.\n------")
+    os.remove(filename)
+    print("Map deleted.\n------")
 
 @bot.command(name='coordsadd', description="Adds coordinates in the format x,y,z,<description>.")
 async def on_message(ctx):  # pylint: disable=function-redefined
@@ -390,13 +292,6 @@ async def on_message(ctx):  # pylint: disable=function-redefined
 
     # remove command text for parsing
     coords_info = message_content.replace(command, '')
-
-    # define function to check message format
-    def check_string_format_coords(string):
-        pattern = r'-?\d+,-?\d+,-?\d+,.*'
-        if re.match(pattern, string):
-            return True
-        return False
 
     if check_string_format_coords(coords_info):
         # convert string to list
@@ -436,7 +331,6 @@ async def on_message(ctx):  # pylint: disable=function-redefined
 
     else:
         await ctx.send("Please input in the format 'x, y, z, <description>'.")
-
 
 @bot.command(name='coordsdelete', description="Removes coordinates from the list"
                                               " by specifying the ID.")
