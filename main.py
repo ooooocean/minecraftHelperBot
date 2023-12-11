@@ -22,10 +22,7 @@ database_params = {
 }
 
 # get root dir
-ROOT_DIR = os.path.dirname(
-    os.path.abspath(__file__)
-)
-print(os.path.abspath('.'))
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # allows for bot to detect all members belonging to the server.
 intents = discord.Intents.all()
