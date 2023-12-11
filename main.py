@@ -1,5 +1,6 @@
 # minecraftHelperBot
 """A Discord bot that provides a variety of functions to improve QoL when playing Minecraft."""
+# adding text to test for Jenkins build
 import os
 import time
 import math
