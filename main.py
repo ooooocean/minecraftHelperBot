@@ -47,11 +47,10 @@ def check_string_format_coords(string):
         return True
     return False
 
-
 # define function to get data from database
 def get_data_from_database():
     """Gets all information from the coordinates DB."""
-    print("Initating connection to database.")
+    print("Initiating connection to database for data extraction.")
     try:
         conn = mariadb.connect(**database_params)
         print("Connected to database.")
@@ -69,6 +68,8 @@ def get_data_from_database():
         for item in cursor:
             query_results.append(item)
 
+        conn.close()
+        print("Closed connection to database.")
     except mariadb.Error as e:
         print(f"Error connecting to the database: {e}")
 
@@ -105,7 +106,7 @@ def generate_map(x_coords, z_coords, labels, filename):
     print("Final plot completed.")
 
     fig.savefig(filename)
-    print("Saving file.\n")
+    print("Saving file.")
     return fig
 
 @bot.event
@@ -114,8 +115,6 @@ async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
 
-
-# converts overworld coords to nether coords
 @bot.command(name='convert', description="Converts overworld coordinates to Nether coordinates.")
 async def on_message(ctx):
     """Function that takes coordinates in the format x, y, z
@@ -123,15 +122,13 @@ async def on_message(ctx):
 
     print("Coordinate convert command triggered.")
 
-    # write the message to a variable
-    message_content = ctx.message.content
-
     # define content to remove
     command = BOT_PREFIX + 'convert '
 
     # remove command text for parsing
-    overworld_coords_text = message_content.replace(command, '')
+    overworld_coords_text = ctx.message.content.replace(command, '')
     overworld_coords_text = overworld_coords_text.replace(" ", "")
+
     # check if coords are in the right format
     if check_string_format_coords(overworld_coords_text):
         # convert coords to list
@@ -152,9 +149,9 @@ async def on_message(ctx):
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
 
 @bot.command(name='coordsfind')
-async def on_message(ctx): # pylint: disable=function-redefined
+async def on_message(ctx):  # pylint: disable=function-redefined
     """Takes in a set of coordinates and finds the closest location """
-    print("Locate closest location command triggered.")
+    print("Triggered location sorting function.")
 
     # define content to remove
     command = BOT_PREFIX + 'coordsfind '
@@ -180,7 +177,7 @@ async def on_message(ctx): # pylint: disable=function-redefined
                                   math.dist((overworld_coords[0], overworld_coords[2]),
                                             (item[1], item[3]))])
 
-        distance_list.sort(key = lambda row: row[3])
+        distance_list.sort(key=lambda row: row[3])
 
         # generate embed for sorted list
 
@@ -205,9 +202,9 @@ async def on_message(ctx): # pylint: disable=function-redefined
 
         filename = 'sortedmap.png'
         fig = generate_map([row[1] for row in data],
-                     [row[3] for row in data],
-                     [row[4] for row in data],
-                     filename)
+                           [row[3] for row in data],
+                           [row[4] for row in data],
+                           filename)
 
         plot_dir = os.path.join(ROOT_DIR, filename)
 
@@ -221,7 +218,9 @@ async def on_message(ctx): # pylint: disable=function-redefined
 
         # Return the message object
         await ctx.send(embed=embed_object,
-                       file = embed_map)
+                       file=embed_map)
+
+        print("Message sent with list of locations sorted and map with user location.")
 
         os.remove(filename)
         print("Map deleted.\n------")
@@ -232,10 +231,9 @@ async def on_message(ctx): # pylint: disable=function-redefined
 @bot.command(name='coordslist', description="Lists saved coordinates.")
 async def on_message(ctx):  # pylint: disable=function-redefined
     """Lists saved coordinates by pulling from database and generates a map with the coordinates."""
-    print("List coordinates command triggered.")
+    print("Triggered coordinates list command.")
     # get data from database
     data = get_data_from_database()
-
     filename = 'map.png'
 
     # generate map from extracted data
@@ -243,6 +241,14 @@ async def on_message(ctx):  # pylint: disable=function-redefined
                  [row[3] for row in data],
                  [row[4] for row in data],
                  filename)
+
+    # reassemble full coordinate list
+    coords_list = []
+    for item in data:
+        coords = ', '.join((str(item[1]),
+                            str(item[2]),
+                            str(item[3])))
+        coords_list.append(coords)
 
     # define plot directory
     plot_dir = os.path.join(ROOT_DIR, filename)
@@ -264,10 +270,10 @@ async def on_message(ctx):  # pylint: disable=function-redefined
                            value='\n'.join([str(x[0]) for x in data]),
                            inline=True)
     embed_object.add_field(name="Description",
-                           value='\n'.join(str(x[2]) for x in data),
+                           value='\n'.join(str(x[4]) for x in data),
                            inline=True)
     embed_object.add_field(name="Coords",
-                           value='\n'.join(str(x[1]) for x in data),
+                           value='\n'.join(x for x in coords_list),
                            inline=True)
     embed_object.set_image(url="attachment://" + filename)
 
@@ -282,14 +288,14 @@ async def on_message(ctx):  # pylint: disable=function-redefined
 @bot.command(name='coordsadd', description="Adds coordinates in the format x,y,z,<description>.")
 async def on_message(ctx):  # pylint: disable=function-redefined
     """Takes coordinates in the format x, y, z, <description> and saves it to the database."""
-    # write the message to a variable
-    message_content = ctx.message.content
+
+    print("Triggered add coordinates command.")
 
     # define content to remove
     command = BOT_PREFIX + 'coordsadd '
 
     # remove command text for parsing
-    coords_info = message_content.replace(command, '')
+    coords_info = ctx.message.content.replace(command, '')
 
     if check_string_format_coords(coords_info):
         # convert string to list
@@ -320,8 +326,7 @@ async def on_message(ctx):  # pylint: disable=function-redefined
             conn.close()
             print("Connection closed.")
 
-            await ctx.send("Your coordinates have been successfully saved! "
-                           "Please run mc.coordslist to see the updated list.")
+            await ctx.send("Your coordinates have been successfully saved!")
 
         except mariadb.Error as e:
             print(f"Error connecting to the database: {e}")
@@ -329,6 +334,7 @@ async def on_message(ctx):  # pylint: disable=function-redefined
 
     else:
         await ctx.send("Please input in the format 'x, y, z, <description>'.")
+    print("------")
 
 @bot.command(name='coordsdelete', description="Removes coordinates from the list"
                                               " by specifying the ID.")
@@ -356,7 +362,7 @@ async def on_message(ctx):  # pylint: disable=function-redefined
         # Attempt connection
         try:
             conn = mariadb.connect(**database_params)
-            print("Connected to DB. Inserting the following data:")
+            print(f"Connected to DB. Deleting coords with the following ID: {coords_id}")
 
             cursor = conn.cursor()
 
@@ -373,10 +379,7 @@ async def on_message(ctx):  # pylint: disable=function-redefined
             conn.close()
             print("Connection closed.")
 
-            await ctx.send(
-                "Your coordinates have been successfully deleted! "
-                "Please run mc.coordslist to see the updated list.")
-            print('----')
+            await ctx.send("Your coordinates have been successfully deleted!")
 
         except mariadb.Error as e:
             print(f"Error connecting to the database: {e}")
@@ -385,5 +388,7 @@ async def on_message(ctx):  # pylint: disable=function-redefined
     else:
         await ctx.send("Please input in the format 'mc.coordsdelete <id>'.")
 
+    print("------")
 
-bot.run(TOKEN)
+if __name__ == "__main__":
+    bot.run(TOKEN)
