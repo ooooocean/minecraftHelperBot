@@ -39,7 +39,6 @@ bot = commands.Bot(command_prefix=BOT_PREFIX.lower(), intents=intents)
 # get the server
 localServer = discord.utils.get(client.guilds, id=GUILD)
 
-
 # define function to check coords
 def check_string_format_coords(string):
     """Checks a string to see if it is in the format x, y, z."""
@@ -47,7 +46,6 @@ def check_string_format_coords(string):
     if re.match(pattern, string):
         return True
     return False
-
 
 # define function to get data from database
 def get_data_from_database():
@@ -76,7 +74,6 @@ def get_data_from_database():
         print(f"Error connecting to the database: {e}")
 
     return query_results
-
 
 def generate_map(x_coords, z_coords, labels, filename):
     """Generates map for given coordinates and labels, saving them into a file."""
@@ -112,13 +109,11 @@ def generate_map(x_coords, z_coords, labels, filename):
     print("Saving file.")
     return fig
 
-
 @bot.event
 async def on_ready():
     """Prints a ready message in the terminal upon connection."""
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
-
 
 @bot.command(name='convert', description="Converts overworld coordinates to Nether coordinates.")
 async def on_message(ctx):
@@ -152,7 +147,6 @@ async def on_message(ctx):
         print("-----")
     else:
         await ctx.send("Wrong co-ordinate format. Please enter coords in the format 'x, y, z'.")
-
 
 @bot.command(name='coordsfind')
 async def on_message(ctx):  # pylint: disable=function-redefined
@@ -291,7 +285,6 @@ async def on_message(ctx):  # pylint: disable=function-redefined
     os.remove(filename)
     print("Map deleted.\n------")
 
-
 @bot.command(name='coordsadd', description="Adds coordinates in the format x,y,z,<description>.")
 async def on_message(ctx):  # pylint: disable=function-redefined
     """Takes coordinates in the format x, y, z, <description> and saves it to the database."""
@@ -342,7 +335,6 @@ async def on_message(ctx):  # pylint: disable=function-redefined
     else:
         await ctx.send("Please input in the format 'x, y, z, <description>'.")
     print("------")
-
 
 @bot.command(name='coordsdelete', description="Removes coordinates from the list"
                                               " by specifying the ID.")
@@ -398,5 +390,5 @@ async def on_message(ctx):  # pylint: disable=function-redefined
 
     print("------")
 
-
-bot.run(TOKEN)
+if __name__ == "__main__":
+    bot.run(TOKEN)
