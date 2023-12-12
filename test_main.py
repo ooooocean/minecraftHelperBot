@@ -1,3 +1,5 @@
+"""Unit tests for Discord bot"""
+
 import pytest
 import main
 
@@ -7,4 +9,5 @@ import main
                           ("-1,-1,-1", True),
                           ("a,b,c", False)])
 def test_check_string_format_coords(test_input, expected_output):
+    """Checks for valid data inputs for coords regex function"""
     assert main.check_string_format_coords(test_input) == expected_output
